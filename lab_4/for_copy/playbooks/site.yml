@@ -1,0 +1,49 @@
+---
+- name: Manage VM1 packages
+  hosts: vm1_group
+  become: yes
+  tasks:
+    - name: Install packages on VM1
+      apt:
+        name:
+          - htop
+          - git
+          - curl
+        state: present
+
+- name: Manage VM2 packages
+  hosts: vm2_group
+  become: yes
+  tasks:
+    - name: Install packages on VM2
+      apt:
+        name:
+          - mc
+          - tree
+          - net-tools
+        state: present
+
+- name: Manage packages for all_servers
+  hosts: all_servers
+  become: yes
+  tasks:
+    - name: Install common packages on all servers
+      apt:
+        name:
+          - vim
+          - tmux
+        state: present
+
+- name: Deploy PostgreSQL on VM2
+  hosts: vm2_group
+  become: yes
+  roles:
+    - postgresql
+
+- name: Deploy Nginx on VM2
+  hosts: vm2_group
+  become: yes
+  roles:
+    - nginx
+  vars:
+    proxy_path: http://192.168.75.2:8089

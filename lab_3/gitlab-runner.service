@@ -1,0 +1,15 @@
+[Unit]
+Description=GitLab Runner
+After=network.target
+
+[Service]
+Type=simple
+User=gitlab-runner-user
+Group=gitlab-runner-user
+WorkingDirectory=/home/gitlab-runner-user
+ExecStart=/usr/bin/gitlab-runner run --working-directory=/home/gitlab-runner-user --config=/home/gitlab-runner-user/.gitlab-runner/config.toml
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

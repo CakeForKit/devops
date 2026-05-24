@@ -1,0 +1,37 @@
+---
+# tasks file for ./ansible-lab/roles/postgresql
+- name: Install packages
+  apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2 
+      - acl
+    state: present
+  become: yes
+
+- name: Is started and enabled
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Create test database
+  become_user: postgres
+  become: yes
+  environment:
+    ANSIBLE_REMOTE_TMP: /tmp/ansible-tmp
+  postgresql_db:
+    name: my_app_db
+    state: present
+
+- name: Create a database user
+  become_user: postgres
+  become: yes
+  postgresql_user:
+    name: app_user
+    password: secure_password_here
+    db: my_app_db
+    priv: ALL
+    state: present

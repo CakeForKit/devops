@@ -1,0 +1,7 @@
+---
+# handlers file for ./ansible-lab/roles/nginx
+- name: Reload Nginx
+  service:
+    name: nginx
+    state: reloaded
+  become: yes

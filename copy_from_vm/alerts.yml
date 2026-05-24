@@ -1,0 +1,26 @@
+groups:
+  - name: web_servers
+    rules:
+      # Алерт на падение Nginx
+      - alert: NginxDown
+        expr: |
+          node_systemd_unit_state{name="nginx.service", state="active"} == 0 
+          or absent(node_systemd_unit_state{name="nginx.service", state="active"})
+        for: 30s
+        labels:
+          severity: critical
+          service: nginx
+        annotations:
+          summary: "Nginx is down"
+          description: "Nginx process is not running on {{ $labels.instance }}"
+
+      # Алерт на падение Caddy
+      - alert: CaddyDown
+        expr: up{job="caddy"} == 0 or absent(up{job="caddy"})
+        for: 30s
+        labels:
+          severity: critical
+          service: caddy
+        annotations:
+          summary: "Caddy is down"
+          description: "Caddy is not responding on {{ $labels.instance }}"

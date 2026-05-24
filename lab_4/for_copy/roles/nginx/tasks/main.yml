@@ -1,0 +1,37 @@
+---
+# tasks file for ./ansible-lab/roles/nginx
+- name: Install Nginx package
+  apt:
+    name: nginx
+    state: present
+  become: yes
+
+- name: Is started and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Create web root directory
+  file:
+    path: /var/www/my_app
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+  become: yes
+
+- name: Copy Nginx site configuration
+  template:
+    src: default.conf.j2
+    dest: /etc/nginx/sites-available/default
+  become: yes
+  notify: Reload Nginx
+
+- name: Enable site configuration
+  file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  become: yes
