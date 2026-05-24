@@ -1,0 +1,85 @@
+# test-runner:
+#   script:
+#     - echo "Runner is working!!!"
+#     - whoami
+#     - pwd
+
+stages:
+  - build
+  - test
+  - deploy
+  - .post
+
+variables:
+  DEPLOY_HOST: "192.168.170.138"  # IP ВМ1
+  DEPLOY_USER: "deployer"
+  DEPLOY_PATH: "/var/www/myapp"
+  EMAIL_TO: "katherine_2022@mail.ru"
+  
+  # Маскированная переменная 
+  # SSH_PRIVATE_KEY - ключ для доступа к ВМ1
+
+
+# Шаблон для job с SSH
+.ssh_setup: &ssh_setup
+  before_script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+build:
+  stage: build
+  script:
+    - python3 src/generate_static.py
+    - mkdir -p public
+    - cp src/index.html public/
+    - cp src/generated_image.png public/
+  artifacts:
+    paths:
+      - public/
+    expire_in: 1 hour
+  only:
+    - branches
+
+test:
+  <<: *ssh_setup          
+  stage: test
+  script:
+    - chmod +x tests/test_nginx.sh
+    - ./tests/test_nginx.sh
+  only:
+    - branches
+
+deploy:
+  <<: *ssh_setup      
+  stage: deploy
+  script:
+    # Деплой статики
+    - scp -r public/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/
+    
+    # Деплой конфига Nginx
+    - scp nginx/default.conf $DEPLOY_USER@$DEPLOY_HOST:/tmp/default.conf.new
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "sudo cp /tmp/default.conf.new /etc/nginx/sites-available/default"
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "rm -f /tmp/default.conf.new"
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "sudo nginx -t"
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "sudo systemctl reload nginx"
+    
+    # Проверка доступности
+    - curl -sSf "http://$DEPLOY_HOST" > /dev/null && echo "Deployment successful!"
+    
+  environment:
+    name: production
+    url: http://$DEPLOY_HOST
+  only:
+    - main
+    - master
+    - develop
+
+notify:
+  stage: .post
+  script:
+    - chmod +x scripts/notify.sh
+    - ./scripts/notify.sh "$CI_PIPELINE_ID" "$CI_PROJECT_ID"
+  when: always

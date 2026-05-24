@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My CI/CD Application</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f0f0f0;
+        }}
+        .container {{
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        h1 {{ color: #333; }}
+        .info {{ margin: 20px 0; }}
+        .commit {{ color: #666; font-family: monospace; }}
+        img {{ max-width: 100%; height: auto; margin-top: 20px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Deployed Application</h1>
+        <div class="info">
+            <p><strong>Commit:</strong> <span class="commit">{commit_hash}</span></p>
+            <p><strong>Message:</strong> {commit_message}</p>
+            <p><strong>Custom Data:</strong> {custom_data}</p>
+            <p><strong>Build Time:</strong> {build_time}</p>
+        </div>
+        <img src="generated_image.png" alt="Generated QR Code">
+    </div>
+</body>
+</html>
